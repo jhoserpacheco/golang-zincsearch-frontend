@@ -1,12 +1,9 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, onBeforeMount, onBeforeUpdate } from "vue";
 import axios from 'axios';
 import { markTerms, transformDate, formatEmail } from '../utils/markEmail.js'
 
-
-const props = defineProps({
-    searchTerm: String,
-})
+const searchTerm = ref("")
 
 const BASE_API = "http://localhost:8000/"
 const searchApi = axios.create({
@@ -15,60 +12,85 @@ const searchApi = axios.create({
 
 const emails = ref([])
 const selectedEmail = ref()
+let pageActualTotal = ref(0)
 let currentPage = ref(1)
-let pageSize = ref(10)
+let pageSize = ref(20)
 let totalPages = ref(1)
 async function getAllEmail() {
     let searchUrl = "search?term="
-    let response = await searchApi.get(searchUrl + props.searchTerm)
+    let response = await searchApi.get(searchUrl + searchTerm.value)
     emails.value = response.data.hits.hits.map(hit => {
         return {
             person: hit._source.person,
             email_tag: hit._source.email_tag,
-            message_id: markTerms(hit._source.message_id, props.searchTerm),
-            from: markTerms(hit._source.from, props.searchTerm),
-            to: markTerms(hit._source.to, props.searchTerm),
-            subject: markTerms(hit._source.subject, props.searchTerm),
-            date: transformDate(hit._source.date, props.searchTerm),
-            content: markTerms(formatEmail(hit._source), props.searchTerm),
+            message_id: markTerms(hit._source.message_id, searchTerm.value),
+            from: markTerms(hit._source.from, searchTerm.value),
+            to: markTerms(hit._source.to, searchTerm.value),
+            subject: (hit._source.subject) == "" ? "(no subject)" : markTerms(hit._source.subject, searchTerm.value),
+            date: transformDate(hit._source.date, searchTerm.value),
+            content: markTerms(hit._source.content, searchTerm.value),
         }
     })
     emails.value = Array.from(emails.value)
+    currentPage.value = 1
+    pageActualTotal.value = emails.value.slice((currentPage - 1) * pageSize, currentPage * pageSize).length
+    pageSize.value = 20
+    totalPages.value = Math.ceil(emails.value.length / pageSize.value)
+    selectedEmail.value = null
 }
 
-onMounted(() => {
-    watch(() => props.searchTerm, () => {
-        getAllEmail()
-        currentPage.value = 1
-        pageSize.value = 10
-        totalPages.value = Math.ceil(emails.value.length / pageSize.value)
-        selectedEmail.value = null
-    });
+onBeforeMount(() => {
+    getAllEmail()
 })
 
 
 </script>
 <template>
 
-    <div @change="getAllEmail()">
-        <div class="flex">
-            <div class="w-1/2">
-                <div>
-                    <!-- Muestra la paginación -->
-                    <div class="flex justify-center mt-4">
-                        <button v-if="currentPage > 1" class="text-blue-500 font-bold hover:underline mr-2"
-                            @click="currentPage--">
-                            Anterior
-                        </button>
-                        <span class="text-gray-600 font-bold mr-2">Página {{ currentPage }} de {{ totalPages }}</span>
-                        <button v-if="currentPage < totalPages" class="text-blue-500 font-bold hover:underline"
-                            @click="currentPage++">
-                            Siguiente
-                        </button>
-                    </div>
+    <!-- search bar-->
+    <div class="search-bar my-4 mx-6">
+        <label for="default-search" class="px-20 mb-2 text-sm font-medium sr-only ">Search</label>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg aria-hidden="true" class="w-5 h-5 " fill="none" stroke="blue" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <input type="search" v-model="searchTerm" id="default-search" @keyup.enter="getAllEmail()"
+                class="block w-full p-4 pl-10 text-sm border border-gray-300 rounded-tl-2xl rounded-br-2xl bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:placeholder-gray-400 dark:text-dark dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Search emails..." required>
+            <button type="submit" @click="getAllEmail()"
+                class="text-white absolute right-2.5 bottom-2.5 bg-violet-600 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-tl-2xl rounded-br-2xl text-sm px-4 py-2 dark:bg-violet-600 dark:hover:bg-violet-700 dark:focus:ring-violet-800">Search</button>
+        </div>
+    </div>
+    <!-- end search bar-->
+    <div class="flex">
+        <div class="w-1/2 ">
+            <!-- pagination -->
+            <div class="flex justify-center my-2 w-full">
+                <button v-if="currentPage > 1"
+                    class="px-2 rounded-xl text-white bg-violet-600 font-bold hover:underline mr-2"
+                    @click="currentPage--">
+                    Previous
+                </button>
+                <span class="text-black-600 mr-2">Page {{ currentPage }} of {{ totalPages }}</span>
+                <button v-if="currentPage < totalPages"
+                    class="px-2 rounded-xl text-white bg-blue-800 font-bold hover:underline" @click="currentPage++">
+                    Next
+                </button>
+                <div class="text-black-600 ml-2">
+                    {{ (pageSize * currentPage) - pageSize }}-{{ (pageSize * currentPage) }} of
+                    {{ emails.length }}
                 </div>
-                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            </div>
+            <!-- end pagination -->
+            <!-- table emails-->
+            <div class="rounded-xl">
+                <table class="w-full text-sm text-left mr-2 rounded-xl">
+                    <!--header table with from, subject and date -->
+                    <thead class="text-base uppercase email-head">
                         <tr>
                             <th scope="col" class="py-3 px-6 w-2/5">
                                 From
@@ -76,17 +98,18 @@ onMounted(() => {
                             <th scope="col" class="py-3 px-6 w-2/5">
                                 Subject
                             </th>
-                            <th scope="col" class="py-3 px-6  w-min">
+                            <th scope="col" class="py-3 px-6 w-min">
                                 Date
                             </th>
                         </tr>
                     </thead>
+                    <!-- end header table with from, subject and date -->
                     <tbody>
                         <tr v-for="email in emails.slice((currentPage - 1) * pageSize, currentPage * pageSize)"
                             :key="email" :class="{ 'selectable-row': email === selectedEmail }"
                             v-on:click="selectedEmail = email"
-                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                            <td class="w-2/5 py-4 px-6 font-medium text-gray-900 dark:text-white" v-html="email.from">
+                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 cursor-pointer email-body text-white">
+                            <td class="w-2/5 py-4 px-6 font-medium" v-html="email.from">
                             </td>
                             <td class="py-4 px-6 w-2/5" v-html="email.subject">
                             </td>
@@ -95,21 +118,41 @@ onMounted(() => {
                         </tr>
                     </tbody>
                 </table>
-            </div>
-            <div class="w-1/2 p-4 text-sm text-left text-gray-500 dark:bg-gray-800 dark:text-white"
-                v-if="selectedEmail != null" v-html="selectedEmail.content">
-            </div>
-            <div class="w-1/2 p-4 text-sm text-left text-gray-500 dark:bg-gray-800 dark:text-white"
-                v-else="selectedEmail">
-                <h1 class="text-2xl text-center pt-10 pb-20"> No email selected </h1>
-                <h5 class="text-xs text-center pt-10 pb-30"> Created by Jhoser Pacheco </h5>
+                <!-- end table emails-->
             </div>
         </div>
+        <!-- email content preview-->
+        <div class="w-1/2 p-4 text-sm text-left text-black bg-sky-100 dark:text-black ml-2 mt-10 border rounded-xl border-blue-600"
+            v-if="selectedEmail != null" v-html="formatEmail(selectedEmail)">
+        </div>
+        <div class="w-1/2 p-4 text-sm text-left text-black bg-blue-100 dark:text-black ml-2 mt-10 border rounded-xl border-blue-600"
+            v-else="selectedEmail">
+            <h1 class="text-2xl text-center pt-10 pb-20"> No email selected </h1>
+            <!--<h5 class="text-xs text-center pt-10 pb-20">Created by Jhoser Pacheco </h5>-->
+            <h5 class="text-xs text-center pt-10 pb-20">Created by Jhoser Pacheco </h5>
+        </div>
+        <!-- end email content preview-->
     </div>
 </template>
 
 <style>
+.email-head {
+    background-color: #12d57d;
+}
+
+.email-body {
+    background-color: #16173b
+}
+
+table tr:nth-child(n+2):nth-child(even) {
+    background-color: #01022e;
+}
+
+table tr:nth-child(n+2):nth-child(odd) {
+    background-color: #16173b;
+}
+
 .selectable-row {
-    background-color: #ddd;
+    background-color: #441fe2 !important;
 }
 </style>
