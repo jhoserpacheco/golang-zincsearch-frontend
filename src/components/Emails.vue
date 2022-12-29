@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted, onBeforeMount, onBeforeUpdate } from "vue";
+import { RouterLink, RouterView } from 'vue-router'
 import axios from 'axios';
+import HomeView from '../views/HomeView.vue'
 import { markTerms, transformDate, formatEmail } from '../utils/markEmail.js'
 
 const searchTerm = ref("")
@@ -34,7 +36,6 @@ async function getAllEmail() {
     emails.value = Array.from(emails.value)
     currentPage.value = 1
     pageActualTotal.value = emails.value.slice((currentPage - 1) * pageSize, currentPage * pageSize).length
-    pageSize.value = 20
     totalPages.value = Math.ceil(emails.value.length / pageSize.value)
     selectedEmail.value = null
 }
@@ -46,7 +47,7 @@ onBeforeMount(() => {
 
 </script>
 <template>
-
+    <HomeView></HomeView>
     <!-- search bar-->
     <div class="search-bar my-4 mx-6">
         <label for="default-search" class="px-20 mb-2 text-sm font-medium sr-only ">Search</label>
@@ -66,9 +67,9 @@ onBeforeMount(() => {
         </div>
     </div>
     <!-- end search bar-->
-    <div class="flex">
+    <div class="flex mb-2">
+        <!-- pagination -->
         <div class="w-1/2 ">
-            <!-- pagination -->
             <div class="flex justify-center my-2 w-full">
                 <button v-if="currentPage > 1"
                     class="px-2 rounded-xl text-white bg-violet-600 font-bold hover:underline mr-2"
@@ -85,7 +86,21 @@ onBeforeMount(() => {
                     {{ emails.length }}
                 </div>
             </div>
-            <!-- end pagination -->
+        </div>
+        <!-- end pagination -->
+        <!-- create index -->
+        <div class="w-1/2 ">
+            <div class="flex text-center items-center justify-center my-2 w-full">
+                <RouterLink to="/bulk" class="rounded-xl text-white bg-pink-500 font-bold px-2 ">Create index
+                </RouterLink>
+            </div>
+        </div>
+        <!-- end create index -->
+    </div>
+    <!-- table emails and email preview-->
+    <div class="flex">
+        <div class="w-1/2 ">
+
             <!-- table emails-->
             <div class="rounded-xl">
                 <table class="w-full text-sm text-left mr-2 rounded-xl">
@@ -122,21 +137,24 @@ onBeforeMount(() => {
             </div>
         </div>
         <!-- email content preview-->
-        <div class="w-1/2 p-4 text-sm text-left text-black bg-sky-100 dark:text-black ml-2 mt-10 border rounded-xl border-blue-600"
-            v-if="selectedEmail != null" v-html="formatEmail(selectedEmail)">
-        </div>
-        <div class="w-1/2 p-4 text-sm text-left text-black bg-blue-100 dark:text-black ml-2 mt-10 border rounded-xl border-blue-600"
-            v-else="selectedEmail">
-            <h1 class="text-2xl text-center pt-10 pb-20"> No email selected </h1>
-            <!--<h5 class="text-xs text-center pt-10 pb-20">Created by Jhoser Pacheco </h5>-->
-            <h5 class="text-xs text-center pt-10 pb-20">Created by Jhoser Pacheco </h5>
+        <div class="w-1/2">
+            <div class="h-full p-4 text-sm text-left text-black bg-sky-100 dark:text-black ml-2 border rounded-xl border-blue-600"
+                v-if="selectedEmail != null" v-html="formatEmail(selectedEmail)">
+            </div>
+            <div class="h-full p-4 text-sm text-left text-black bg-blue-100 dark:text-black ml-2 border rounded-xl border-blue-600"
+                v-else="selectedEmail">
+                <h1 class="text-2xl text-center pt-10 pb-20"> No email selected </h1>
+                <!--<h5 class="text-xs text-center pt-10 pb-20">Created by Jhoser Pacheco </h5>-->
+                <h5 class="text-xs text-center pt-10 pb-20">Created by Jhoser Pacheco </h5>
+            </div>
         </div>
         <!-- end email content preview-->
     </div>
+    <!-- table emails and email preview-->
 </template>
 
 <style>
-.email-head {
+table thead {
     background-color: #12d57d;
 }
 
