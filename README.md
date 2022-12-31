@@ -1,7 +1,55 @@
-# Vue 3 + Vite
+# Trumail
+![Logo](/src/assets/tru.png)
+---
+## Table of Contents 
+1. [General Info](#general-info)
+2. [Screenshots](#screenshots)
+3. [Project Setup](#project-setup)
+4. [Upcoming Features](#upcoming-features)
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+---
+## General info
+Frontend of the Golang-Zincsearch project, consists of processing all the files in a dataset called "**Enron Email Dataset**" to later add it to the Zincsearch search engine.
 
-## Recommended IDE Setup
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+You can get more information about the dataset [here](https://www.cs.cmu.edu/~enron/) and for direct download click [here](http://www.cs.cmu.edu/~enron/enron_mail_20110402.tgz) (423MB)
+
+##### [Backend Project](https://github.com/jhoserpacheco/golang-zincsearch-backend.git)
+
+---
+## Screenshots
+Home Trumail without any email selected.
+
+![Trumail](/public/Trumail.png)
+
+Trumail searching for the word "Colombia" and selecting an email in the indexer.
+
+![Trumail-search-Colombia](/public/Trumail%20search%20Colombia.png)
+
+Bulk/ Create an index placing the name and records in ndjson format
+
+![Trumail-search-Email](/public/Bulk%20Index%20Document.png)
+
+---
+## Project Setup
+
+### Clone repository
+```sh
+git clone https://github.com/jhoserpacheco/golang-zincsearch-frontend.git
+cd golang-zincsearch-frontend
+```
+### Install dependencies 
+```sh
+npm install
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
+npm run dev
+➜ http://localhost:5173/
+```
+---
+## Upcoming Features 
+- Option to upload file in .ndjson format, process it and then create an index
+- In the search engine, indicate in which index you want to search
