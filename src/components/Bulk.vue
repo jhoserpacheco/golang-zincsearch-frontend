@@ -44,6 +44,9 @@ function sendIndex() {
             responseStatus.value = 500;
             isOpen = true
         }, customHeaders);
+    setTimeout(() => {
+        responseStatus.value = 0
+    }, 3000)
 }
 
 </script>

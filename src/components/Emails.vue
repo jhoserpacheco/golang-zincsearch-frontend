@@ -14,7 +14,7 @@ const searchApi = axios.create({
 
 const emails = ref([])
 const selectedEmail = ref()
-let pageActualTotal = ref(0)
+//let pageActualTotal = ref(0)
 let currentPage = ref(1)
 let pageSize = ref(20)
 let totalPages = ref(1)
@@ -35,7 +35,7 @@ async function getAllEmail() {
     })
     emails.value = Array.from(emails.value)
     currentPage.value = 1
-    pageActualTotal.value = emails.value.slice((currentPage - 1) * pageSize, currentPage * pageSize).length
+    //pageActualTotal.value = emails.value.slice((currentPage - 1) * pageSize, currentPage * pageSize).length
     totalPages.value = Math.ceil(emails.value.length / pageSize.value)
     selectedEmail.value = null
 }
